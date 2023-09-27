@@ -1,5 +1,6 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, reverse
 from django.views import generic, View
+from django.http import HttpResponseRedirect
 from .models import Post
 from .forms import CommentForm
 
@@ -68,3 +69,20 @@ class PostDetail(View):
                 "comment_form": CommentForm()
             },
         )
+
+
+class PostLike(View):
+
+    def post(self, request, slug):
+        # first, get the post we intend to toggle the like on
+        post = get_object_or_404(Post, slug=slug)
+
+        # if the post has a like from this user id already
+        if post.likes.filter(id=request.user.id).exists():
+            # remove like
+            post.likes.remove(request.user)
+        else:
+            # add a like
+            post.likes.add(request.user)
+
+        return HttpResponseRedirect(reverse('post_detail', args=[slug]))
